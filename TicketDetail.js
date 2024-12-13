@@ -19,7 +19,6 @@ export default function TicketDetail({ route, navigation }) {
         <View style={styles.row}>
           <Text style={styles.label}>Departure</Text>
           <Text style={styles.info}>{ticket.departure}</Text>
-          <Image source={require('./img/gary-lopater-dOOGrK3zcUc-unsplash.jpg')} style={styles.airlineLogo} />
         </View>
 
         <View style={styles.row}>
@@ -30,6 +29,11 @@ export default function TicketDetail({ route, navigation }) {
         <View style={styles.row}>
           <Text style={styles.label}>Departure Date</Text>
           <Text style={styles.info}>{ticket.date}</Text>
+        </View>
+
+        <View style={styles.row}>
+          <Text style={styles.label}>Type</Text>
+          <Text style={styles.info}>{ticket.type}</Text>
         </View>
 
         <View style={styles.row}>
@@ -44,19 +48,6 @@ export default function TicketDetail({ route, navigation }) {
             <Picker.Item label="3 Passengers" value="3" />
             <Picker.Item label="4 Passengers" value="4" />
             <Picker.Item label="5 Passengers" value="5" />
-          </Picker>
-        </View>
-
-        <View style={styles.row}>
-          <Text style={styles.label}>Class</Text>
-          <Picker
-            selectedValue={selectedClass}
-            onValueChange={(itemValue) => setSelectedClass(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Economy" value="Economy" />
-            <Picker.Item label="Business" value="Business" />
-            <Picker.Item label="First Class" value="First Class" />
           </Picker>
         </View>
 
