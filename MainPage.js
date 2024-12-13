@@ -1,7 +1,8 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal, Image, Animated, Dimensions } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, Modal, Animated, Dimensions } from 'react-native';
+import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
-
+import moment from 'moment';
 const { width } = Dimensions.get('window');
 const IMAGE_WIDTH = width * 0.75;
 const SPACING = width * 0.25;
@@ -12,19 +13,12 @@ const images = [
   { id: '3', uri: require('./img/cebu.jpg') },
 ];
 
-const tickets = [
-  { id: '1', date: 'Wed, Dec 11', route: 'MNL -> CGY | Cebu Pacific Air' },
-  { id: '2', date: 'Wed, Nov 27', route: 'MNL -> ILO | Philippine Air Asia' },
-  { id: '3', date: 'Wed, Dec 4', route: 'MNL -> SJI | Cebgo' },
-  { id: '4', date: 'Thu, Jan 9', route: 'MNL -> DRP | Philippine Airlines' },
-  { id: '5', date: 'Tue, Nov 19', route: 'MNL -> KLO | Philippine Airlines' },
-];
-
 export default function MainPage() {
   const navigation = useNavigation();
+  const [flights, setFlights] = useState([]);
   const [isModalVisible, setModalVisible] = useState(false);
   const scrollX = useRef(new Animated.Value(0)).current;
-  const flatListRef = useRef();
+  const flatListRef = useRef(null); // Make sure to initialize ref as null
 
   const openModal = () => setModalVisible(true);
   const closeModal = () => setModalVisible(false);
@@ -32,12 +26,51 @@ export default function MainPage() {
   useEffect(() => {
     let index = 0;
     const interval = setInterval(() => {
-      index = (index + 1) % images.length;
-      flatListRef.current.scrollToIndex({ index, animated: true });
+      if (flatListRef.current) { // Check if flatListRef is available before calling scrollToIndex
+        index = (index + 1) % images.length;
+        flatListRef.current.scrollToIndex({ index, animated: true });
+      }
     }, 3000);
 
-    return () => clearInterval(interval);
+    
+
+    const fetchFlights = async () => {
+      try {
+        const response = await axios.get('https://localhost:3660/flight_info'); // Use Axios directly without https import
+        console.log('Flights fetched successfully:', response.data);
+        setFlights(response.data);
+      } catch (error) {
+        console.error('Error fetching flight data:', error.message);
+        if (error.response) {
+          console.error('Response error:', error.response.data);
+        } else if (error.request) {
+          console.error('Request error:', error.request);
+        } else {
+          console.error('Error message:', error.message);
+        }
+      }
+    };
+
+    fetchFlights();
+
+    return () => clearInterval(interval); // Clear the interval when the component is unmounted
   }, []);
+
+  const renderTicket = ({ item }) => (
+    <TouchableOpacity
+      onPress={() => navigation.navigate('TicketDetail', { flightId: item.ID })}
+      style={styles.ticket}
+    >
+      <View style={styles.ticketHeader}>
+        <Text style={styles.ticketDate}>{moment(item.Date).format('YYYY-MM-DD')}</Text>
+      </View>
+      <Text style={styles.ticketRoute}>
+        {item.AirportOrigin} To {item.AirportDest}
+      </Text>
+      <Text style={styles.ticketType}>{item.type}</Text>
+    </TouchableOpacity>
+  );
+  
 
   return (
     <View style={styles.container}>
@@ -53,7 +86,7 @@ export default function MainPage() {
       <Text style={styles.header}>Popular Destinations In The Philippines</Text>
 
       <Animated.FlatList
-        ref={flatListRef}
+        ref={flatListRef} // Correctly set ref here
         data={images}
         keyExtractor={(item) => item.id}
         horizontal
@@ -71,21 +104,15 @@ export default function MainPage() {
           </View>
         )}
       />
-      <Text style={styles.showAllText}>Show all</Text>
+      <Text style={styles.header}>Available Tickets</Text>
+
       <FlatList
-      data={tickets}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => (
-    <TouchableOpacity
-      onPress={() => navigation.navigate('TicketDetail', { ticket: item })}
-    >
-      <View style={styles.ticket}>
-        <Text style={styles.ticketDate}>{item.date}</Text>
-        <Text style={styles.ticketRoute}>{item.route}</Text>
-      </View>
-    </TouchableOpacity>
-  )}
-/>
+        data={flights}
+        keyExtractor={(item) => item.ID.toString()}
+        renderItem={renderTicket}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.ticketList}
+      />
 
       <Modal
         visible={isModalVisible}
@@ -120,6 +147,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     zIndex: 1,
+    marginBottom: 20,
+  },
+  imageContainer: {
+    width: IMAGE_WIDTH,
+    marginRight: SPACING / 2,
+  },
+  destinationImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 10,
   },
   logoImage: {
     width: 30,
@@ -131,39 +168,47 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginTop: 70,
     marginBottom: 16,
     textAlign: 'center',
   },
-  imageContainer: {
-    width: IMAGE_WIDTH,
-    marginRight: SPACING / 2,
-  },
-  destinationImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 10,
-  },
-  showAllText: {
-    fontSize: 14,
-    color: '#007bff',
-    textAlign: 'right',
-    marginBottom: 16,
-  },
   ticket: {
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  ticketHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   ticketDate: {
     fontSize: 16,
     fontWeight: 'bold',
   },
-  ticketRoute: {
-    fontSize: 14,
-    color: '#555',
+  airlineLogo: {
+    width: 40,
+    height: 40,
   },
-
+  ticketRoute: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginVertical: 4,
+  },
+  ticketType: {
+    fontSize: 12,
+    color: '#777',
+  },
+  ticketList: {
+    paddingBottom: 100, // Ensure space at the bottom when scrolling
+  },
   modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
