@@ -8,13 +8,14 @@ const classPrices = {
 };
 
 const CheckoutScreen = ({ route, navigation }) => {
-  const { passengers, flight_info, AirportOrigin, AirportDest } = route.params || {}; // Destructure here
+  const { passengers = [], flight_info, AirportOrigin, AirportDest } = route.params || {}; // Destructure with default values
 
   const travelTax = 1620;
 
   const calculateTotalCost = () => {
     const flightCost = passengers.reduce((total, passenger) => {
-      return total + (classPrices[passenger.travelClass] || 0);
+      const classPrice = classPrices[passenger.travelClass] || 0; // Default to 0 if not found
+      return total + classPrice;
     }, 0);
     return flightCost + travelTax;
   };
@@ -49,7 +50,7 @@ const CheckoutScreen = ({ route, navigation }) => {
       <Text style={styles.paymentTitle}>Making Payment to Philippine Airline</Text>
       <View style={styles.costDetails}>
         <Text style={styles.costText}>Flight cost</Text>
-        <Text style={styles.costValue}>₱{passengers.length > 0 ? passengers.reduce((total, passenger) => total + classPrices[passenger.travelClass], 0).toFixed(2) : '0.00'}</Text>
+        <Text style={styles.costValue}>₱{totalCost.toFixed(2)}</Text>
       </View>
       <View style={styles.costDetails}>
         <Text style={styles.costText}>Airline fee</Text>
@@ -61,7 +62,7 @@ const CheckoutScreen = ({ route, navigation }) => {
       </View>
       <View style={styles.totalCostDetails}>
         <Text style={styles.totalCostText}>Total Cost :</Text>
-        <Text style={styles.totalCostValue}>₱{totalCost.toFixed(2)}</Text>
+        <Text style={styles.totalCostValue}>₱{(totalCost + 200 + travelTax).toFixed(2)}</Text> {/* Include all fees */}
       </View>
 
       {/* Button */}

@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, Modal, Animated, Dimensions } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, Modal, Animated, Dimensions, ScrollView } from 'react-native';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import moment from 'moment';
+
 const { width } = Dimensions.get('window');
 const IMAGE_WIDTH = width * 0.75;
 const SPACING = width * 0.25;
@@ -18,7 +19,7 @@ export default function MainPage() {
   const [flights, setFlights] = useState([]);
   const [isModalVisible, setModalVisible] = useState(false);
   const scrollX = useRef(new Animated.Value(0)).current;
-  const flatListRef = useRef(null); // Make sure to initialize ref as null
+  const flatListRef = useRef(null);
 
   const openModal = () => setModalVisible(true);
   const closeModal = () => setModalVisible(false);
@@ -26,47 +27,36 @@ export default function MainPage() {
   useEffect(() => {
     let index = 0;
     const interval = setInterval(() => {
-      if (flatListRef.current) { // Check if flatListRef is available before calling scrollToIndex
+      if (flatListRef.current) {
         index = (index + 1) % images.length;
         flatListRef.current.scrollToIndex({ index, animated: true });
       }
     }, 3000);
 
-    
-
     const fetchFlights = async () => {
       try {
-        const response = await axios.get('https://localhost:3660/flight_info'); // Use Axios directly without https import
-        console.log('Flights fetched successfully:', response.data);
+        const response = await axios.get('https://localhost:3660/flight_info');
         setFlights(response.data);
       } catch (error) {
         console.error('Error fetching flight data:', error.message);
-        if (error.response) {
-          console.error('Response error:', error.response.data);
-        } else if (error.request) {
-          console.error('Request error:', error.request);
-        } else {
-          console.error('Error message:', error.message);
-        }
       }
     };
 
     fetchFlights();
-
-    return () => clearInterval(interval); // Clear the interval when the component is unmounted
+    return () => clearInterval(interval);
   }, []);
 
   const renderTicket = ({ item }) => (
     <TouchableOpacity
-    onPress={() => navigation.navigate('TicketDetail', {
-      ticket: {
-        departure: item.AirportOrigin,
-        destination: item.AirportDest,
-        date: item.Date,
-        type: item.type,
-      }
-    })}
-    style={styles.ticket}
+      onPress={() => navigation.navigate('TicketDetail', {
+        ticket: {
+          departure: item.AirportOrigin,
+          destination: item.AirportDest,
+          date: item.Date,
+          type: item.type,
+        }
+      })}
+      style={styles.ticket}
     >
       <View style={styles.ticketHeader}>
         <Text style={styles.ticketDate}>{moment(item.Date).format('YYYY-MM-DD')}</Text>
@@ -77,10 +67,9 @@ export default function MainPage() {
       <Text style={styles.ticketType}>{item.type}</Text>
     </TouchableOpacity>
   );
-  
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.topButtons}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Image source={require('./img/logo-back.png')} style={styles.logoImage} />
@@ -93,11 +82,11 @@ export default function MainPage() {
       <Text style={styles.header}>Popular Destinations In The Philippines</Text>
 
       <Animated.FlatList
-        ref={flatListRef} // Correctly set ref here
+        ref={flatListRef}
         data={images}
         keyExtractor={(item) => item.id}
         horizontal
-        showsHorizontalScrollIndicator={false}
+        showsHorizontalScrollIndicator={true}
         pagingEnabled
         snapToInterval={IMAGE_WIDTH + SPACING}
         decelerationRate="fast"
@@ -111,14 +100,16 @@ export default function MainPage() {
           </View>
         )}
       />
+
       <Text style={styles.header}>Available Tickets</Text>
 
       <FlatList
         data={flights}
         keyExtractor={(item) => item.ID.toString()}
         renderItem={renderTicket}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
         contentContainerStyle={styles.ticketList}
+        scrollEnabled={true} // Disable scrolling for the FlatList to allow ScrollView to handle it
       />
 
       <Modal
@@ -137,7 +128,7 @@ export default function MainPage() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -148,9 +139,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   topButtons: {
-    top: 46,
-    left: 6,
-    right: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     zIndex: 1,
@@ -200,10 +188,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  airlineLogo: {
-    width: 40,
-    height: 40,
-  },
   ticketRoute: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -214,7 +198,7 @@ const styles = StyleSheet.create({
     color: '#777',
   },
   ticketList: {
-    paddingBottom: 100, // Ensure space at the bottom when scrolling
+    paddingBottom: 50,
   },
   modalContainer: {
     flex: 1,
