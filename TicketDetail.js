@@ -57,6 +57,8 @@ export default function TicketDetail({ route, navigation }) {
             navigation.navigate('Booking', {
               passengers: selectedPassengers,
               travelClass: selectedClass,
+              AirportOrigin: ticket.departure, // Assuming ticket has departure airport info
+              AirportDest: ticket.destination, // Assuming ticket has destination airport info
             })
           }
         >

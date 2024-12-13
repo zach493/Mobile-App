@@ -1,35 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native'; // Import navigation hook
+import { useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import axios from 'axios'; // Import Axios
 
 const BookingScreen = ({ route }) => {
-  const navigation = useNavigation(); // Initialize navigation
-  const { passengers: initialPassengerCount, travelClass } = route.params || {};
+  const navigation = useNavigation();
+  const { passengers: initialPassengerCount, travelClass, AirportOrigin, AirportDest } = route.params || {};
   const [passengers, setPassengers] = useState([]);
-  const [passengerCount, setPassengerCount] = useState(initialPassengerCount || 1);
 
   useEffect(() => {
-    const initialPassengers = Array.from({ length: passengerCount }, () => ({
+    const initialPassengers = Array.from({ length: initialPassengerCount || 1 }, () => ({
       givenName: '',
       lastName: '',
       nationality: '',
       gender: '',
       email: '',
       birthDate: null,
+      travelClass: travelClass || 'Economy',
     }));
     setPassengers(initialPassengers);
-  }, [passengerCount]);
-
-  const addPassenger = () => {
-    const newPassenger = { givenName: '', lastName: '', nationality: '', gender: '', email: '', birthDate: null };
-    const updatedPassengers = [...passengers, newPassenger];
-    
-    setPassengers(updatedPassengers);
-    setPassengerCount(updatedPassengers.length);  // Update the count based on the length of the updated array
-  };
-  
+  }, [initialPassengerCount, travelClass]);
 
   const updatePassenger = (index, key, value) => {
     const updatedPassengers = [...passengers];
@@ -37,15 +29,37 @@ const BookingScreen = ({ route }) => {
     setPassengers(updatedPassengers);
   };
 
+  const savePassengersToDatabase = async () => {
+    try {
+      const passengerData = passengers.map(passenger => ({
+        Name: `${passenger.givenName} ${passenger.lastName}`,
+        Nationality: passenger.nationality,
+        Gender: passenger.gender,
+        Email: passenger.email,
+        Birthdate: passenger.birthDate ? passenger.birthDate.toISOString().split('T')[0] : null, // Format date
+        Class: passenger.travelClass,
+      }));
+
+      // Send data to the API
+      const response = await axios.post('https://localhost:3660/users', { passengers: passengerData });
+      console.log('Data saved successfully:', response.data);
+      
+      // Navigate to Checkout with passengers and airport details
+      navigation.navigate('Checkout', { 
+        passengers: passengerData, 
+        travelClass, 
+        AirportOrigin, 
+        AirportDest 
+      });
+    } catch (error) {
+      console.error('Error saving passenger data:', error);
+    }
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Book your flight</Text>
       <Text style={styles.subtitle}>Enter The Information Of the Passengers</Text>
-
-      <View style={styles.detailContainer}>
-        <Text style={styles.label}>Class:</Text>
-        <Text style={styles.value}>{travelClass || 'Economy'}</Text>
-      </View>
 
       {passengers.map((passenger, index) => (
         <View key={index} style={styles.passengerContainer}>
@@ -107,21 +121,23 @@ const BookingScreen = ({ route }) => {
               }}
             />
           )}
+          <Picker
+            selectedValue={passenger.travelClass}
+            style={styles.input}
+            onValueChange={(value) => updatePassenger(index, 'travelClass', value)}
+          >
+            <Picker.Item label="Economy" value="Economy" />
+            <Picker.Item label="Business" value="Business" />
+            <Picker.Item label="First Class" value="First Class" />
+          </Picker>
         </View>
       ))}
 
-      <TouchableOpacity style={styles.addButton} onPress={addPassenger}>
-        <Text style={styles.addButtonText}>Add Another Passenger</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.passengerCount}>Passengers Added: {passengerCount}</Text>
+      <Text style={styles.passengerCount}>Passengers Added: {initialPassengerCount}</Text>
 
       <Button
-        title="Done Adding Passengers"
-        onPress={() => {
-          console.log('Passengers:', passengers);
-          navigation.navigate('Checkout', { passengers }); // Navigate to CheckoutScreen
-        }}
+        title="Save and Proceed to Checkout"
+        onPress={savePassengersToDatabase}
       />
     </ScrollView>
   );
@@ -143,20 +159,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
     textAlign: 'center',
-  },
-  detailContainer: {
-    marginBottom: 20,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  label: {
-    fontSize: 18,
-    color: '#333',
-  },
-  value: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 5,
   },
   passengerContainer: {
     marginBottom: 20,
@@ -181,17 +183,6 @@ const styles = StyleSheet.create({
   },
   dateText: {
     color: '#555',
-  },
-  addButton: {
-    backgroundColor: '#007BFF',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  addButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
   },
   passengerCount: {
     fontSize: 16,

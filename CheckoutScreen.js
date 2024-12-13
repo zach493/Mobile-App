@@ -1,12 +1,36 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 
-const CheckoutScreen = ({ route,navigation }) => {
-  const { passengers } = route.params || [];
+const classPrices = {
+  Economy: 6875,
+  Business: 14502,
+  'First Class': 10049,
+};
+
+const CheckoutScreen = ({ route, navigation }) => {
+  const { passengers, flight_info, AirportOrigin, AirportDest } = route.params || {}; // Destructure here
+
+  const travelTax = 1620;
+
+  const calculateTotalCost = () => {
+    const flightCost = passengers.reduce((total, passenger) => {
+      return total + (classPrices[passenger.travelClass] || 0);
+    }, 0);
+    return flightCost + travelTax;
+  };
+
+  const getRandomFlightTime = () => {
+    const hours = Math.floor(Math.random() * 24);
+    const minutes = Math.floor(Math.random() * 60);
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+  };
+
+  const totalCost = calculateTotalCost();
+  const departureTime = getRandomFlightTime();
+  const arrivalTime = getRandomFlightTime();
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-
       <Image
         source={require('./img/card.png')}
         style={styles.cardImage}
@@ -14,19 +38,18 @@ const CheckoutScreen = ({ route,navigation }) => {
 
       {/* Flight Details */}
       <View style={styles.flightDetails}>
-        <Text style={styles.flightTime}>7:45</Text>
-        <Text style={styles.airportCode}>MNL</Text>
-        <Text style={styles.flightDuration}>1h 15m</Text>
-        <Text style={styles.directText}>Direct</Text>
-        <Text style={styles.flightTime}>9:00</Text>
-        <Text style={styles.airportCode}>KLO</Text>
+        <Text style={styles.flightTime}>{departureTime} AM</Text>
+        <Text style={styles.airportCode}>{AirportOrigin}</Text>
+        <Text style={styles.directText}>{flight_info?.type || 'Direct'}</Text>
+        <Text style={styles.flightTime}>{arrivalTime} PM</Text>
+        <Text style={styles.airportCode}>{AirportDest}</Text>
       </View>
 
       {/* Payment Details */}
       <Text style={styles.paymentTitle}>Making Payment to Philippine Airline</Text>
       <View style={styles.costDetails}>
         <Text style={styles.costText}>Flight cost</Text>
-        <Text style={styles.costValue}>₱1600.00</Text>
+        <Text style={styles.costValue}>₱{passengers.length > 0 ? passengers.reduce((total, passenger) => total + classPrices[passenger.travelClass], 0).toFixed(2) : '0.00'}</Text>
       </View>
       <View style={styles.costDetails}>
         <Text style={styles.costText}>Airline fee</Text>
@@ -34,11 +57,11 @@ const CheckoutScreen = ({ route,navigation }) => {
       </View>
       <View style={styles.costDetails}>
         <Text style={styles.costText}>Tax</Text>
-        <Text style={styles.costValue}>₱100.00</Text>
+        <Text style={styles.costValue}>₱{travelTax.toFixed(2)}</Text>
       </View>
       <View style={styles.totalCostDetails}>
         <Text style={styles.totalCostText}>Total Cost :</Text>
-        <Text style={styles.totalCostValue}>₱1900</Text>
+        <Text style={styles.totalCostValue}>₱{totalCost.toFixed(2)}</Text>
       </View>
 
       {/* Button */}
@@ -58,15 +81,6 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#fff',
   },
-  backButton: {
-    position: 'absolute',
-    top: 16,
-    left: 16,
-  },
-  backText: {
-    fontSize: 20,
-    color: '#000',
-  },
   cardImage: {
     width: '100%',
     height: 250,
@@ -85,10 +99,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   airportCode: {
-    fontSize: 16,
-    color: '#555',
-  },
-  flightDuration: {
     fontSize: 16,
     color: '#555',
   },

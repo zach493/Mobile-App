@@ -3,9 +3,11 @@ const mysql = require('mysql2');
 const cors = require('cors');
 const https = require('https');
 const fs = require('fs');
+const bodyParser = require('body-parser'); // Import body-parser
 const app = express();
 
-app.use(cors());  // To enable Cross-Origin Resource Sharing (CORS) for the web client
+app.use(cors()); // To enable Cross-Origin Resource Sharing (CORS) for the web client
+app.use(bodyParser.json()); // Parse JSON bodies
 
 // MySQL connection configuration
 const db = mysql.createConnection({
@@ -37,6 +39,7 @@ app.get('/flight_info', (req, res) => {
   });
 });
 
+// Endpoint to fetch all users
 app.get('/users', (req, res) => {
   db.query('SELECT * FROM users', (err, results) => {
     if (err) {
@@ -48,6 +51,7 @@ app.get('/users', (req, res) => {
   });
 });
 
+// Endpoint to fetch bookings
 app.get('/bookings', (req, res) => {
   db.query('SELECT * FROM bookings', (err, results) => {
     if (err) {
@@ -70,6 +74,33 @@ app.get('/flight_info/:id', (req, res) => {
       res.json(results[0]);
     }
   });
+});
+
+// POST endpoint to save passenger information
+app.post('/users', (req, res) => {
+  const { passengers } = req.body; // Expecting an array of passengers
+  const insertQueries = passengers.map(passenger => {
+    return new Promise((resolve, reject) => {
+      const { Name, Nationality, Gender, Email, Birthdate, Class } = passenger;
+      const query = 'INSERT INTO users (Name, Nationality, Gender, Email, Birthdate, Class) VALUES (?, ?, ?, ?, ?, ?)';
+      db.query(query, [Name, Nationality, Gender, Email, Birthdate, Class], (err, result) => {
+        if (err) {
+          console.error('Error inserting passenger data:', err);
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      });
+    });
+  });
+
+  Promise.all(insertQueries)
+    .then(results => {
+      res.status(201).send({ message: 'Passengers added successfully', results });
+    })
+    .catch(error => {
+      res.status(500).send('Error inserting passenger data');
+    });
 });
 
 // Log incoming requests for debugging
