@@ -36,7 +36,7 @@ export default function MainPage() {
 
     const fetchFlights = async () => {
       try {
-        const response = await axios.get('https://localhost:3660/flight_info'); // Use Axios directly without https import
+        const response = await axios.get('https://9dab-2001-4455-25a-4e00-3581-6d58-65aa-754c.ngrok-free.app/flight_info'); // Use Axios directly without https import
         console.log('Flights fetched successfully:', response.data);
         setFlights(response.data);
       } catch (error) {
