@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import axios from 'axios'; // Import Axios
+import axios from 'axios';
 
 const BookingScreen = ({ route }) => {
   const navigation = useNavigation();
@@ -13,11 +12,10 @@ const BookingScreen = ({ route }) => {
   useEffect(() => {
     const initialPassengers = Array.from({ length: initialPassengerCount || 1 }, () => ({
       givenName: '',
-      lastName: '',
       nationality: '',
       gender: '',
       email: '',
-      birthDate: null,
+      birthDate: { year: '', month: '', day: '' },
       travelClass: travelClass || 'Economy',
     }));
     setPassengers(initialPassengers);
@@ -29,21 +27,62 @@ const BookingScreen = ({ route }) => {
     setPassengers(updatedPassengers);
   };
 
+  const generateRandomFlightDetails = () => {
+    const flights = ['15', '20', '25']; // Example flight numbers
+    const gates = ['A1', 'B2', 'C3']; // Example gates
+    const group = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // Random letter A-Z
+    const seat = Math.floor(Math.random() * 30) + 1; // Random seat number 1-30
+    return {
+      flight: flights[Math.floor(Math.random() * flights.length)],
+      gate: gates[Math.floor(Math.random() * gates.length)],
+      group,
+      seat,
+    };
+  };
+
   const savePassengersToDatabase = async () => {
     try {
-      const passengerData = passengers.map(passenger => ({
-        Name: `${passenger.givenName} ${passenger.lastName}`,
-        Nationality: passenger.nationality,
-        Gender: passenger.gender,
-        Email: passenger.email,
-        Birthdate: passenger.birthDate ? passenger.birthDate.toISOString().split('T')[0] : null, // Format date
-        Class: passenger.travelClass,
-      }));
-
+      // Validate passengers data
+      const isValid = passengers.every(passenger => {
+        return (
+          passenger.givenName.trim() !== '' &&
+          passenger.nationality.trim() !== '' &&
+          passenger.gender.trim() !== '' &&
+          passenger.email.trim() !== '' &&
+          passenger.birthDate.year !== '' &&
+          passenger.birthDate.month !== '' &&
+          passenger.birthDate.day !== '' // Ensure all birthDate fields are set
+        );
+      });
+  
+      if (!isValid) {
+        alert('Please fill in all fields before submitting.');
+        return;
+      }
+  
+      const passengerData = passengers.map(passenger => {
+        const { flight, gate, group, seat } = generateRandomFlightDetails();
+        const birthDate = `${passenger.birthDate.year}-${passenger.birthDate.month}-${passenger.birthDate.day}`;
+        return {
+          given_name: passenger.givenName, // Maps to `given_name` in the DB
+          email: passenger.email, // Maps to `email`
+          birth_date: birthDate, // Maps to `birth_date`
+          nationality: passenger.nationality, // Maps to `nationality`
+          gender: passenger.gender, // Maps to `gender`
+          travel_class: passenger.travelClass || 'Economy', // Maps to `travel_class`
+          flight_number: flight, // Maps to `flight_number`
+          gate, // Maps to `gate`
+          group, // Added as part of random generation
+          seat, // Added as part of random generation
+        };
+      });
+  
+      console.log('Passenger data being sent to the API:', passengerData);
+  
       // Send data to the API
-      const response = await axios.post('https://he-server.up.railway.app/users', { passengers: passengerData });
+      const response = await axios.post('https://he-production-466d.up.railway.app/passengers', { passengers: passengerData });
       console.log('Data saved successfully:', response.data);
-      
+  
       // Navigate to Checkout with passengers and airport details
       navigation.navigate('Checkout', { 
         passengers: passengerData, 
@@ -53,9 +92,10 @@ const BookingScreen = ({ route }) => {
       });
     } catch (error) {
       console.error('Error saving passenger data:', error);
+      alert('An error occurred while saving passenger data.');
     }
   };
-
+  
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Book your flight</Text>
@@ -68,12 +108,6 @@ const BookingScreen = ({ route }) => {
             placeholder="Given Name"
             value={passenger.givenName}
             onChangeText={(value) => updatePassenger(index, 'givenName', value)}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Last Name"
-            value={passenger.lastName}
-            onChangeText={(value) => updatePassenger(index, 'lastName', value)}
           />
           <Picker
             selectedValue={passenger.nationality}
@@ -102,25 +136,45 @@ const BookingScreen = ({ route }) => {
             value={passenger.email}
             onChangeText={(value) => updatePassenger(index, 'email', value)}
           />
-          <TouchableOpacity
-            style={styles.datePicker}
-            onPress={() => updatePassenger(index, 'showDatePicker', true)}
+          
+          <Text style={styles.dateText}>Select Birth Date</Text>
+
+          {/* Year Picker */}
+          <Picker
+            selectedValue={passenger.birthDate.year}
+            style={styles.input}
+            onValueChange={(value) => updatePassenger(index, 'birthDate', { ...passenger.birthDate, year: value })}
           >
-            <Text style={styles.dateText}>
-              {passenger.birthDate ? passenger.birthDate.toDateString() : 'Select Birth Date'}
-            </Text>
-          </TouchableOpacity>
-          {passenger.showDatePicker && (
-            <DateTimePicker
-              value={passenger.birthDate || new Date()}
-              mode="date"
-              display="default"
-              onChange={(event, date) => {
-                updatePassenger(index, 'birthDate', date || passenger.birthDate);
-                updatePassenger(index, 'showDatePicker', false);
-              }}
-            />
-          )}
+            <Picker.Item label="Year" value="" />
+            {Array.from({ length: 100 }, (_, i) => 2023 - i).map((year) => (
+              <Picker.Item key={year} label={year.toString()} value={year.toString()} />
+            ))}
+          </Picker>
+
+          {/* Month Picker */}
+          <Picker
+            selectedValue={passenger.birthDate.month}
+            style={styles.input}
+            onValueChange={(value) => updatePassenger(index, 'birthDate', { ...passenger.birthDate, month: value })}
+          >
+            <Picker.Item label="Month" value="" />
+            {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((month, i) => (
+              <Picker.Item key={i} label={month} value={(i + 1).toString()} />
+            ))}
+          </Picker>
+
+          {/* Day Picker */}
+          <Picker
+            selectedValue={passenger.birthDate.day}
+            style={styles.input}
+            onValueChange={(value) => updatePassenger(index, 'birthDate', { ...passenger.birthDate, day: value })}
+          >
+            <Picker.Item label="Day" value="" />
+            {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+              <Picker.Item key={day} label={day.toString()} value={day.toString()} />
+            ))}
+          </Picker>
+
           <Picker
             selectedValue={passenger.travelClass}
             style={styles.input}
@@ -173,16 +227,10 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 10,
   },
-  datePicker: {
-    width: '100%',
-    marginBottom: 10,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-  },
   dateText: {
-    color: '#555',
+    fontSize: 16,
+    marginBottom: 10,
+    textAlign: 'center',
   },
   passengerCount: {
     fontSize: 16,

@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, Modal, Animated, Dimensions, ScrollView } from 'react-native';
+import { ScrollView, View, Text, FlatList, TouchableOpacity, StyleSheet, Image, Modal, Animated, Dimensions } from 'react-native';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import moment from 'moment';
 
 const { width } = Dimensions.get('window');
 const IMAGE_WIDTH = width * 0.75;
-const SPACING = width * 0.25;
+const SPACING = width * 0.5;
 
 const images = [
   { id: '1', uri: require('./img/water.jpg') },
@@ -35,7 +35,7 @@ export default function MainPage() {
 
     const fetchFlights = async () => {
       try {
-        const response = await axios.get('https://he-server.up.railway.app/flight_info');
+        const response = await axios.get('https://he-production-466d.up.railway.app/flight_info');
         setFlights(response.data);
       } catch (error) {
         console.error('Error fetching flight data:', error.message);
@@ -68,8 +68,14 @@ export default function MainPage() {
     </TouchableOpacity>
   );
 
+  const renderImage = ({ item }) => (
+    <View style={styles.imageContainer}>
+      <Image source={item.uri} style={styles.destinationImage} />
+    </View>
+  );
+
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.topButtons}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Image source={require('./img/logo-back.png')} style={styles.logoImage} />
@@ -81,37 +87,34 @@ export default function MainPage() {
 
       <Text style={styles.header}>Popular Destinations In The Philippines</Text>
 
+      {/* Carousel Section */}
       <Animated.FlatList
         ref={flatListRef}
         data={images}
-        keyExtractor={(item) => item.id}
         horizontal
-        showsHorizontalScrollIndicator={true}
+        keyExtractor={(image) => image.id}
+        showsHorizontalScrollIndicator={false}
         pagingEnabled
         snapToInterval={IMAGE_WIDTH + SPACING}
         decelerationRate="fast"
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          { useNativeDriver: false }
-        )}
-        renderItem={({ item }) => (
-          <View style={styles.imageContainer}>
-            <Image source={item.uri} style={styles.destinationImage} />
-          </View>
-        )}
+        renderItem={renderImage}
+        style={styles.carousel} // Use a specific style for the carousel to avoid large white space
       />
 
+      {/* Ticket List Header */}
       <Text style={styles.header}>Available Tickets</Text>
 
+      {/* FlatList for Tickets */}
       <FlatList
         data={flights}
         keyExtractor={(item) => item.ID.toString()}
         renderItem={renderTicket}
         showsVerticalScrollIndicator={true}
         contentContainerStyle={styles.ticketList}
-        scrollEnabled={true} // Disable scrolling for the FlatList to allow ScrollView to handle it
+        scrollEnabled={true}
       />
 
+      {/* Modal for Flight Filter */}
       <Modal
         visible={isModalVisible}
         animationType="slide"
@@ -128,15 +131,19 @@ export default function MainPage() {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    top: 50,
     padding: 16,
     backgroundColor: '#fff',
+  },
+  carousel: {
+    marginBottom: 20,  // Adjust the margin if needed to avoid extra space
   },
   topButtons: {
     flexDirection: 'row',
@@ -145,8 +152,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   imageContainer: {
+    left:50,
     width: IMAGE_WIDTH,
     marginRight: SPACING / 2,
+    height:305,
   },
   destinationImage: {
     width: '100%',

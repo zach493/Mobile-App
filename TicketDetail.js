@@ -1,11 +1,24 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import moment from 'moment-timezone'; // Import moment-timezone
 
 export default function TicketDetail({ route, navigation }) {
   const { ticket } = route.params;
   const [selectedPassengers, setSelectedPassengers] = useState('4');
   const [selectedClass, setSelectedClass] = useState('Economy');
+
+  // Function to format the MySQL DATETIME string to local time
+  const formatDateAndTime = (dateString) => {
+    // Convert the MySQL DATETIME string to a moment object in UTC
+    const utcDate = moment.utc(dateString);
+    
+    // Convert to your local timezone (e.g., 'Asia/Manila' for Philippine Time)
+    const localDate = utcDate.tz('Asia/Manila', true);
+
+    // Return the formatted local date and time
+    return localDate.format('YYYY-MM-DD HH:mm:ss');
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -27,8 +40,8 @@ export default function TicketDetail({ route, navigation }) {
         </View>
 
         <View style={styles.row}>
-          <Text style={styles.label}>Departure Date</Text>
-          <Text style={styles.info}>{ticket.date}</Text>
+          <Text style={styles.label}>Departure Date and Time</Text>
+          <Text style={styles.info}>{formatDateAndTime(ticket.date)}</Text>
         </View>
 
         <View style={styles.row}>
@@ -57,8 +70,8 @@ export default function TicketDetail({ route, navigation }) {
             navigation.navigate('Booking', {
               passengers: selectedPassengers,
               travelClass: selectedClass,
-              AirportOrigin: ticket.departure, // Assuming ticket has departure airport info
-              AirportDest: ticket.destination, // Assuming ticket has destination airport info
+              AirportOrigin: ticket.departure, 
+              AirportDest: ticket.destination,
             })
           }
         >

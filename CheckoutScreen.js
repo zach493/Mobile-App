@@ -8,8 +8,7 @@ const classPrices = {
 };
 
 const CheckoutScreen = ({ route, navigation }) => {
-  const { passengers = [], flight_info, AirportOrigin, AirportDest } = route.params || {}; // Destructure with default values
-
+  const { passengers = [], flight_info, AirportOrigin, AirportDest, travelClass } = route.params || {}; // Destructure with default values
   const travelTax = 1620;
 
   const calculateTotalCost = () => {
@@ -39,10 +38,10 @@ const CheckoutScreen = ({ route, navigation }) => {
 
       {/* Flight Details */}
       <View style={styles.flightDetails}>
-        <Text style={styles.flightTime}>{departureTime} AM</Text>
+        <Text style={styles.flightTime}>{departureTime}</Text>
         <Text style={styles.airportCode}>{AirportOrigin}</Text>
-        <Text style={styles.directText}>{flight_info?.type || 'Direct'}</Text>
-        <Text style={styles.flightTime}>{arrivalTime} PM</Text>
+        <Text style={styles.directText}>{flight_info?.type || 'Direct'}</Text> {/* Added fallback */}
+        <Text style={styles.flightTime}>{arrivalTime}</Text>
         <Text style={styles.airportCode}>{AirportDest}</Text>
       </View>
 
@@ -65,10 +64,14 @@ const CheckoutScreen = ({ route, navigation }) => {
         <Text style={styles.totalCostValue}>₱{(totalCost + 200 + travelTax).toFixed(2)}</Text> {/* Include all fees */}
       </View>
 
-      {/* Button */}
       <TouchableOpacity 
         style={styles.button}
-        onPress={() => navigation.navigate('QRCodeScreen')} // Navigate to QRCodeScreen
+        onPress={() => navigation.navigate('QRCodeScreen', { 
+          passengers, // Use the passengers received from BookingScreen
+          travelClass, 
+          AirportOrigin, 
+          AirportDest 
+        })} 
       >
         <Text style={styles.buttonText}>Checkout</Text>
       </TouchableOpacity>

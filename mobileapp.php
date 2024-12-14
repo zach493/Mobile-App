@@ -27,6 +27,7 @@
             <option value="bookings" <?= isset($_POST['table']) && $_POST['table'] === 'bookings' ? 'selected' : '' ?>>Bookings</option>
             <option value="flight_info" <?= isset($_POST['table']) && $_POST['table'] === 'flight_info' ? 'selected' : '' ?>>Flight Info</option>
             <option value="users" <?= isset($_POST['table']) && $_POST['table'] === 'users' ? 'selected' : '' ?>>Users</option>
+            <option value="passengers" <?= isset($_POST['table']) && $_POST['table'] === 'passengers' ? 'selected' : '' ?>>Passengers</option>
         </select>
         <button type="submit">Display</button>
     </form>
