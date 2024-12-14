@@ -1,20 +1,18 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
-const https = require('https');
-const fs = require('fs');
 const bodyParser = require('body-parser'); // Import body-parser
 const app = express();
 
 app.use(cors()); // To enable Cross-Origin Resource Sharing (CORS) for the web client
 app.use(bodyParser.json()); // Parse JSON bodies
 
-// MySQL connection configuration
+// MySQL connection configuration using environment variables
 const db = mysql.createConnection({
-  host: 'flights.cdiagk8o8g4x.ap-southeast-1.rds.amazonaws.com', // Your RDS endpoint
-  user: 'admin', // Your RDS username
-  password: 'xx6UM3oJEa72Hjo5TbmV', // Your RDS password
-  database: 'flights', // Your RDS database name
+  host: process.env.DB_HOST | 'flights.cdiagk8o8g4x.ap-southeast-1.rds.amazonaws.com', // Your RDS endpoint
+  user: process.env.DB_USER | 'admin', // Your RDS username
+  password: process.env.DB_PASSWORD | 'xx6UM3oJEa72Hjo5TbmV', // Your RDS password
+  database: process.env.DB_NAME | 'flights', // Your RDS database name
   port: 3306, // MySQL default port
 });
 
@@ -109,13 +107,8 @@ app.use((req, res, next) => {
   next(); // Pass the request to the next middleware
 });
 
-// Load the SSL certificate and private key
-const sslOptions = {
-  key: fs.readFileSync('private.key'),
-  cert: fs.readFileSync('cert.pem'),
-};
-
-// Create HTTPS server
-https.createServer(sslOptions, app).listen(3660, () => {
-  console.log('HTTPS Server running on https://localhost:3660');
+// Start the server
+const PORT = process.env.PORT || 3660; // Use the PORT from Railway
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
