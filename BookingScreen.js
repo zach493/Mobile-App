@@ -41,7 +41,7 @@ const BookingScreen = ({ route }) => {
       }));
 
       // Send data to the API
-      const response = await axios.post('https://localhost:3660/users', { passengers: passengerData });
+      const response = await axios.post('https://he-server.up.railway.app/users', { passengers: passengerData });
       console.log('Data saved successfully:', response.data);
       
       // Navigate to Checkout with passengers and airport details

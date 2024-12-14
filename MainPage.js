@@ -35,7 +35,7 @@ export default function MainPage() {
 
     const fetchFlights = async () => {
       try {
-        const response = await axios.get('https://localhost:3660/flight_info');
+        const response = await axios.get('https://he-server.up.railway.app/flight_info');
         setFlights(response.data);
       } catch (error) {
         console.error('Error fetching flight data:', error.message);
