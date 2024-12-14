@@ -20,7 +20,6 @@ export default function MainPage() {
   const [isModalVisible, setModalVisible] = useState(false);
   const scrollX = useRef(new Animated.Value(0)).current;
   const flatListRef = useRef(null);
-
   const openModal = () => setModalVisible(true);
   const closeModal = () => setModalVisible(false);
 
@@ -37,7 +36,7 @@ export default function MainPage() {
       try {
         const response = await axios.get('https://he-production-466d.up.railway.app/flight_info');
         setFlights(response.data);
-      } catch (error) {
+      }catch (error) {
         console.error('Error fetching flight data:', error.message);
       }
     };
@@ -80,6 +79,11 @@ export default function MainPage() {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Image source={require('./img/logo-back.png')} style={styles.logoImage} />
         </TouchableOpacity>
+        <TouchableOpacity
+        style={styles.scanButton}
+        onPress={() => navigation.navigate('QRScannerPage')}>
+        <Text style={styles.scanButtonText}>Scan QR Code</Text>
+      </TouchableOpacity>
         <TouchableOpacity onPress={openModal}>
           <Text style={styles.calendarText}>📅</Text>
         </TouchableOpacity>
@@ -87,7 +91,6 @@ export default function MainPage() {
 
       <Text style={styles.header}>Popular Destinations In The Philippines</Text>
 
-      {/* Carousel Section */}
       <Animated.FlatList
         ref={flatListRef}
         data={images}
@@ -98,13 +101,10 @@ export default function MainPage() {
         snapToInterval={IMAGE_WIDTH + SPACING}
         decelerationRate="fast"
         renderItem={renderImage}
-        style={styles.carousel} // Use a specific style for the carousel to avoid large white space
+        style={styles.carousel}
       />
-
-      {/* Ticket List Header */}
       <Text style={styles.header}>Available Tickets</Text>
 
-      {/* FlatList for Tickets */}
       <FlatList
         data={flights}
         keyExtractor={(item) => item.ID.toString()}
@@ -114,7 +114,6 @@ export default function MainPage() {
         scrollEnabled={true}
       />
 
-      {/* Modal for Flight Filter */}
       <Modal
         visible={isModalVisible}
         animationType="slide"
@@ -143,7 +142,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   carousel: {
-    marginBottom: 20,  // Adjust the margin if needed to avoid extra space
+    marginBottom: 20,
   },
   topButtons: {
     flexDirection: 'row',
@@ -235,5 +234,18 @@ const styles = StyleSheet.create({
   },
   modalCloseButtonText: {
     color: '#fff',
+  },
+  scanButton: {
+    marginTop: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: '#007bff',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  scanButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });

@@ -1,23 +1,22 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import SvgQRCode from 'react-native-qrcode-svg';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
-const QRCodeScreen = ({ route }) => {
-  const passengers = route.params?.passengers || []; // Passengers from Booking Screen
-
-  // Function to generate random seat and group
+const QRCodeScreen = ({ route, navigation }) => {
+  const passengers = route.params?.passengers || []; 
+  const { AirportOrigin, AirportDest } = route.params || {};
   const generateRandomSeatAndGroup = () => ({
-    group: String.fromCharCode(65 + Math.floor(Math.random() * 26)), // Random letter A-Z
-    seat: Math.floor(Math.random() * 30) + 1, // Random seat number 1-30
+    group: String.fromCharCode(65 + Math.floor(Math.random() * 26)), 
+    seat: Math.floor(Math.random() * 30) + 1, 
   });
 
-  // Function to save QR code as an image
   const saveQRCode = async (qrData) => {
     const fileUri = `${FileSystem.documentDirectory}${qrData.given_name.replace(/\s/g, '_')}_QRCode.png`;
     await FileSystem.writeAsStringAsync(fileUri, qrData.value, { encoding: FileSystem.EncodingType.Base64 });
     await Sharing.shareAsync(fileUri);
+    navigation.navigate('Main');
   };
 
   return (
@@ -26,21 +25,30 @@ const QRCodeScreen = ({ route }) => {
 
       {passengers.map((passenger, index) => {
         const { group, seat } = generateRandomSeatAndGroup();
-
         const qrData = {
-          given_name: passenger.givenName || 'Unknown',
+          given_name: passenger.given_name || 'Unknown',
           email: passenger.email || 'No Email',
-          flight: passenger.flight || '15', // Dynamic flight number if provided
-          gate: passenger.gate || 'F08', // Dynamic gate if provided
+          nationality: passenger.nationality || 'N/A',
+          gender: passenger.gender || 'N/A',
+          birthDate: `${passenger.birthDate?.year || 'N/A'}-${passenger.birthDate?.month || 'N/A'}-${passenger.birthDate?.day || 'N/A'}`,
+          flight: passenger.flight || '15', 
+          gate: passenger.gate || 'F08',
           group,
           seat,
+          origin: AirportOrigin || 'Unknown',
+          destination: AirportDest || 'Unknown',
           value: JSON.stringify({
-            given_name: passenger.givenName || 'Unknown',
+            given_name: passenger.given_name || 'Unknown',
             email: passenger.email || 'No Email',
+            nationality: passenger.nationality || 'N/A',
+            gender: passenger.gender || 'N/A',
+            birthDate: `${passenger.birthDate?.year || 'N/A'}-${passenger.birthDate?.month || 'N/A'}-${passenger.birthDate?.day || 'N/A'}`,
             flight: passenger.flight || '15',
             gate: passenger.gate || 'F08',
             group,
             seat,
+            origin: AirportOrigin || 'Unknown',
+            destination: AirportDest || 'Unknown',
           }),
         };
 
@@ -50,11 +58,13 @@ const QRCodeScreen = ({ route }) => {
               <SvgQRCode value={qrData.value} size={150} />
             </View>
             <Text style={styles.passengerInfo}>
-  {qrData.given_name || 'Unknown'} - {qrData.email || 'No Email'}{"\n"}
-  Flight: {qrData.flight || '15'} - Gate: {qrData.gate || 'F08'}{"\n"}
-  Group: {qrData.group || 'N/A'} - Seat: {qrData.seat || 'N/A'}
-</Text>
-
+              {qrData.given_name} - {qrData.email}{"\n"}
+              Nationality: {qrData.nationality} - Gender: {qrData.gender}{"\n"}
+              Birth Date: {qrData.birthDate}{"\n"}
+              Flight: {qrData.flight} - Gate: {qrData.gate}{"\n"}
+              Group: {qrData.group} - Seat: {qrData.seat}{"\n"}
+              From: {qrData.origin} - To: {qrData.destination}
+            </Text>
             <TouchableOpacity style={styles.downloadButton} onPress={() => saveQRCode(qrData)}>
               <Text style={styles.buttonText}>Download Ticket</Text>
             </TouchableOpacity>

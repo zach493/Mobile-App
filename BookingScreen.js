@@ -28,10 +28,10 @@ const BookingScreen = ({ route }) => {
   };
 
   const generateRandomFlightDetails = () => {
-    const flights = ['15', '20', '25']; // Example flight numbers
-    const gates = ['A1', 'B2', 'C3']; // Example gates
-    const group = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // Random letter A-Z
-    const seat = Math.floor(Math.random() * 30) + 1; // Random seat number 1-30
+    const flights = ['15', '20', '25']; 
+    const gates = ['A1', 'B2', 'C3'];
+    const group = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    const seat = Math.floor(Math.random() * 30) + 1;
     return {
       flight: flights[Math.floor(Math.random() * flights.length)],
       gate: gates[Math.floor(Math.random() * gates.length)],
@@ -42,7 +42,7 @@ const BookingScreen = ({ route }) => {
 
   const savePassengersToDatabase = async () => {
     try {
-      // Validate passengers data
+
       const isValid = passengers.every(passenger => {
         return (
           passenger.givenName.trim() !== '' &&
@@ -51,39 +51,33 @@ const BookingScreen = ({ route }) => {
           passenger.email.trim() !== '' &&
           passenger.birthDate.year !== '' &&
           passenger.birthDate.month !== '' &&
-          passenger.birthDate.day !== '' // Ensure all birthDate fields are set
+          passenger.birthDate.day !== ''
         );
       });
-  
+
       if (!isValid) {
         alert('Please fill in all fields before submitting.');
         return;
       }
-  
+
       const passengerData = passengers.map(passenger => {
         const { flight, gate, group, seat } = generateRandomFlightDetails();
         const birthDate = `${passenger.birthDate.year}-${passenger.birthDate.month}-${passenger.birthDate.day}`;
         return {
-          given_name: passenger.givenName, // Maps to `given_name` in the DB
-          email: passenger.email, // Maps to `email`
-          birth_date: birthDate, // Maps to `birth_date`
-          nationality: passenger.nationality, // Maps to `nationality`
-          gender: passenger.gender, // Maps to `gender`
-          travel_class: passenger.travelClass || 'Economy', // Maps to `travel_class`
-          flight_number: flight, // Maps to `flight_number`
-          gate, // Maps to `gate`
-          group, // Added as part of random generation
-          seat, // Added as part of random generation
+          given_name: passenger.givenName, 
+          email: passenger.email,
+          birthDate: birthDate,
+          nationality: passenger.nationality, 
+          gender: passenger.gender,
+          travel_class: passenger.travelClass || 'Economy',
+          flight_number: flight, 
+          gate,group,seat,
         };
       });
-  
-      console.log('Passenger data being sent to the API:', passengerData);
-  
-      // Send data to the API
+
       const response = await axios.post('https://he-production-466d.up.railway.app/passengers', { passengers: passengerData });
       console.log('Data saved successfully:', response.data);
-  
-      // Navigate to Checkout with passengers and airport details
+
       navigation.navigate('Checkout', { 
         passengers: passengerData, 
         travelClass, 
@@ -92,10 +86,9 @@ const BookingScreen = ({ route }) => {
       });
     } catch (error) {
       console.error('Error saving passenger data:', error);
-      alert('An error occurred while saving passenger data.');
     }
   };
-  
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Book your flight</Text>
@@ -136,10 +129,7 @@ const BookingScreen = ({ route }) => {
             value={passenger.email}
             onChangeText={(value) => updatePassenger(index, 'email', value)}
           />
-          
           <Text style={styles.dateText}>Select Birth Date</Text>
-
-          {/* Year Picker */}
           <Picker
             selectedValue={passenger.birthDate.year}
             style={styles.input}
@@ -150,8 +140,6 @@ const BookingScreen = ({ route }) => {
               <Picker.Item key={year} label={year.toString()} value={year.toString()} />
             ))}
           </Picker>
-
-          {/* Month Picker */}
           <Picker
             selectedValue={passenger.birthDate.month}
             style={styles.input}
@@ -162,8 +150,6 @@ const BookingScreen = ({ route }) => {
               <Picker.Item key={i} label={month} value={(i + 1).toString()} />
             ))}
           </Picker>
-
-          {/* Day Picker */}
           <Picker
             selectedValue={passenger.birthDate.day}
             style={styles.input}

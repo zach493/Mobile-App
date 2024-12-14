@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 
 const classPrices = {
   Economy: 6875,
@@ -8,72 +8,39 @@ const classPrices = {
 };
 
 const CheckoutScreen = ({ route, navigation }) => {
-  const { passengers = [], flight_info, AirportOrigin, AirportDest, travelClass } = route.params || {}; // Destructure with default values
-  const travelTax = 1620;
-
+  const { passengers, travelClass, AirportOrigin, AirportDest } = route.params || {};
+  console.log("Passed passengers data:", passengers);
   const calculateTotalCost = () => {
-    const flightCost = passengers.reduce((total, passenger) => {
-      const classPrice = classPrices[passenger.travelClass] || 0; // Default to 0 if not found
+    return passengers.reduce((total, passenger) => {
+      const classPrice = classPrices[passenger.travel_class] || 0;
       return total + classPrice;
     }, 0);
-    return flightCost + travelTax;
   };
-
-  const getRandomFlightTime = () => {
-    const hours = Math.floor(Math.random() * 24);
-    const minutes = Math.floor(Math.random() * 60);
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-  };
-
-  const totalCost = calculateTotalCost();
-  const departureTime = getRandomFlightTime();
-  const arrivalTime = getRandomFlightTime();
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Image
-        source={require('./img/card.png')}
-        style={styles.cardImage}
-      />
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Checkout</Text>
+      <Text style={styles.subtitle}>Review your flight details</Text>
+      <Text style={styles.details}>
+        From: {AirportOrigin} - To: {AirportDest}
+      </Text>
+      <Text style={styles.details}>Travel Class: {travelClass}</Text>
+      <Text style={styles.details}>Passengers:</Text>
+      {passengers.map((passenger, index) => (
+        <View key={index} style={styles.passengerDetails}>
+          <Text>Name: {passenger.given_name}</Text>
+          <Text>Email: {passenger.email}</Text>
+          <Text>Nationality: {passenger.nationality}</Text>
+          <Text>Gender: {passenger.gender}</Text>
+          <Text>Birth Date: {`${passenger.birthDate.year}-${passenger.birthDate.month}-${passenger.birthDate.day}`}</Text>
+          <Text>Class: {passenger.travel_class}</Text>
+        </View>
+      ))}
 
-      {/* Flight Details */}
-      <View style={styles.flightDetails}>
-        <Text style={styles.flightTime}>{departureTime}</Text>
-        <Text style={styles.airportCode}>{AirportOrigin}</Text>
-        <Text style={styles.directText}>{flight_info?.type || 'Direct'}</Text> {/* Added fallback */}
-        <Text style={styles.flightTime}>{arrivalTime}</Text>
-        <Text style={styles.airportCode}>{AirportDest}</Text>
-      </View>
+      <Text style={styles.totalCost}>Total Cost: ₱{calculateTotalCost().toFixed(2)}</Text>
 
-      {/* Payment Details */}
-      <Text style={styles.paymentTitle}>Making Payment to Philippine Airline</Text>
-      <View style={styles.costDetails}>
-        <Text style={styles.costText}>Flight cost</Text>
-        <Text style={styles.costValue}>₱{totalCost.toFixed(2)}</Text>
-      </View>
-      <View style={styles.costDetails}>
-        <Text style={styles.costText}>Airline fee</Text>
-        <Text style={styles.costValue}>₱200.00</Text>
-      </View>
-      <View style={styles.costDetails}>
-        <Text style={styles.costText}>Tax</Text>
-        <Text style={styles.costValue}>₱{travelTax.toFixed(2)}</Text>
-      </View>
-      <View style={styles.totalCostDetails}>
-        <Text style={styles.totalCostText}>Total Cost :</Text>
-        <Text style={styles.totalCostValue}>₱{(totalCost + 200 + travelTax).toFixed(2)}</Text> {/* Include all fees */}
-      </View>
-
-      <TouchableOpacity 
-        style={styles.button}
-        onPress={() => navigation.navigate('QRCodeScreen', { 
-          passengers, // Use the passengers received from BookingScreen
-          travelClass, 
-          AirportOrigin, 
-          AirportDest 
-        })} 
-      >
-        <Text style={styles.buttonText}>Checkout</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('QRCodeScreen', { passengers, AirportOrigin, AirportDest })}>
+        <Text style={styles.button}>Proceed to Payment</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -81,77 +48,42 @@ const CheckoutScreen = ({ route, navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    padding: 16,
-    backgroundColor: '#fff',
+    padding: 20,
   },
-  cardImage: {
-    width: '100%',
-    height: 250,
-    borderRadius: 8,
-    marginTop: 40,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 10,
   },
-  flightDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    marginTop: 16,
-    marginBottom: 24,
+  subtitle: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginBottom: 10,
   },
-  flightTime: {
+  details: {
+    fontSize: 16,
+    marginVertical: 5,
+  },
+  passengerDetails: {
+    padding: 10,
+    borderWidth: 1,
+    marginVertical: 5,
+  },
+  totalCost: {
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  airportCode: {
-    fontSize: 16,
-    color: '#555',
-  },
-  directText: {
-    fontSize: 16,
-    color: '#000',
-  },
-  paymentTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
+    marginTop: 20,
     textAlign: 'center',
   },
-  costDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  costText: {
-    fontSize: 16,
-    color: '#555',
-  },
-  costValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  totalCostDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 16,
-  },
-  totalCostText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  totalCostValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
-  },
   button: {
-    backgroundColor: '#000',
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  buttonText: {
+    fontSize: 18,
     color: '#fff',
-    fontSize: 16,
+    backgroundColor: '#007BFF',
+    textAlign: 'center',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 20,
   },
 });
 

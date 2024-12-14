@@ -7,6 +7,8 @@ import TicketDetail from './TicketDetail';
 import BookingScreen from './BookingScreen';
 import CheckoutScreen from './CheckoutScreen'; 
 import QRCodeScreen from './QRCodeScreen';
+import QRScannerPage from './QRScannerPage';
+import ScannedDataPage from './ScannedDataPage';
 
 const Stack = createStackNavigator();
 
@@ -22,6 +24,11 @@ export default function App() {
         <Stack.Screen
           name="Main"
           component={MainPage}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="QRScannerPage"
+          component={QRScannerPage}
           options={{ headerShown: false }}
         />
         <Stack.Screen 
@@ -44,6 +51,10 @@ export default function App() {
           component={QRCodeScreen} 
           options={{ title: 'QR Code Screen' }}
         />
+        <Stack.Screen 
+        name="ScannedDataPage" 
+        component={ScannedDataPage}
+        options={{ title: 'Scanned Data' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

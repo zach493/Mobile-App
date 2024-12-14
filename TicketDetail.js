@@ -1,54 +1,41 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import moment from 'moment-timezone'; // Import moment-timezone
+import moment from 'moment-timezone';
 
 export default function TicketDetail({ route, navigation }) {
   const { ticket } = route.params;
   const [selectedPassengers, setSelectedPassengers] = useState('4');
   const [selectedClass, setSelectedClass] = useState('Economy');
-
-  // Function to format the MySQL DATETIME string to local time
   const formatDateAndTime = (dateString) => {
-    // Convert the MySQL DATETIME string to a moment object in UTC
     const utcDate = moment.utc(dateString);
-    
-    // Convert to your local timezone (e.g., 'Asia/Manila' for Philippine Time)
     const localDate = utcDate.tz('Asia/Manila', true);
-
-    // Return the formatted local date and time
     return localDate.format('YYYY-MM-DD HH:mm:ss');
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Image source={require('./img/gary-lopater-dOOGrK3zcUc-unsplash.jpg')} style={styles.headerImage} />
-
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Image source={require('./img/logo-back.png')} style={styles.logoImage} />
       </TouchableOpacity>
-
       <View style={styles.content}>
         <View style={styles.row}>
           <Text style={styles.label}>Departure</Text>
           <Text style={styles.info}>{ticket.departure}</Text>
         </View>
-
         <View style={styles.row}>
           <Text style={styles.label}>Destination</Text>
           <Text style={styles.info}>{ticket.destination}</Text>
         </View>
-
         <View style={styles.row}>
           <Text style={styles.label}>Departure Date and Time</Text>
           <Text style={styles.info}>{formatDateAndTime(ticket.date)}</Text>
         </View>
-
         <View style={styles.row}>
           <Text style={styles.label}>Type</Text>
           <Text style={styles.info}>{ticket.type}</Text>
         </View>
-
         <View style={styles.row}>
           <Text style={styles.label}>Passenger</Text>
           <Picker
